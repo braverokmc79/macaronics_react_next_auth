@@ -1,79 +1,95 @@
+"use client";
+
+
 import { Button } from "@/components/ui/button";
-import { doSocialLogin } from "@/app/actions/auth";
-import { FcGoogle } from "react-icons/fc";
-import { FaGithub, FaFacebook, FaApple } from "react-icons/fa";
-import { SiNaver, SiKakaotalk } from "react-icons/si";
-import React from "react";
+import {
+  Form,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormControl,
+  FormMessage,  
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { doCredentialsLogin } from "@/app/actions/auth";
+import { useRouter } from "next/navigation";
+
+
+// 1) 폼 유효성 검사 스키마 정의
+const formSchema = z.object({
+  email: z.string().email("유효한 이메일을 입력하세요."),
+  password: z.string().min(4, "비밀번호는 최소 4자 이상이어야 합니다."),
+});
 
 const LoginForm: React.FC = () => {
+  const router = useRouter();
+
+  // 2) useForm 설정
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema), // zodResolver를 사용하여 유효성 검사를 적용
+    defaultValues: { email: "", password: "" }, // 기본값을 빈 문자열로 설정
+  });
+
+  // 3) 폼 제출 핸들러
+  const handleSubmit = async (data: z.infer<typeof formSchema>) => {
+    console.log("로그인 확인이 통과되었습니다.", data);
+    console.log("로그인 확인이 통과되었습니다.", data.email);
+    
+    const response = await doCredentialsLogin(data);
+
+    if (response && !!response.error) {
+      console.log("Error: " , response);
+    } else {
+      router.push("/home");
+    }
+
+  };
+
   return (
-    <form action={doSocialLogin} className="w-96  space-y-2">
-      {/* 구글 로그인 */}
-      <Button
-        type="submit"
-        name="action"
-        value="google"
-        className="w-full flex items-center gap-2 bg-white text-black border border-gray-300 hover:bg-gray-100"
-      >
-        <FcGoogle className="text-xl" />
-        구글 로그인
-      </Button>
+        <Form {...form}>
+          <form
+            onSubmit={form.handleSubmit(handleSubmit)}
+            className="flex flex-col gap-4 mb-2"
+          >
+            {/* 이메일 입력 필드 */}
+            <FormField
+              control={form.control}
+              name="email"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>이메일</FormLabel>
+                  <FormControl>
+                    <Input placeholder="example@email.com" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-      {/* 깃허브 로그인 */}
-      <Button
-        type="submit"
-        name="action"
-        value="github"
-        className="w-full flex items-center gap-2 bg-black text-white hover:bg-gray-800"
-      >
-        <FaGithub className="text-xl" />
-        깃허브 로그인
-      </Button>
+            {/* 비밀번호 입력 필드 */}
+            <FormField
+              control={form.control}
+              name="password"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>비밀번호</FormLabel>
+                  <FormControl>
+                    <Input type="password" placeholder="비밀번호" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-      {/* 네이버 로그인 */}
-      <Button
-        type="submit"
-        name="action"
-        value="naver"
-        className="w-full flex items-center gap-2 bg-[#03C75A] text-white hover:bg-[#029d4d]"
-      >
-        <SiNaver className="text-xl" />
-        네이버 로그인
-      </Button>
-
-      {/* 카카오 로그인 */}
-      <Button
-        type="submit"
-        name="action"
-        value="kakao"
-        className="w-full flex items-center gap-2 bg-[#FEE500] text-black hover:bg-[#ecd400]"
-      >
-        <SiKakaotalk className="text-xl" />
-        카카오 로그인
-      </Button>
-
-      {/* 페이스북 로그인 */}
-      <Button
-        type="submit"
-        name="action"
-        value="facebook"
-        className="w-full flex items-center gap-2 bg-[#1877F2] text-white hover:bg-[#1558b6]"
-      >
-        <FaFacebook className="text-xl" />
-        페이스북 로그인
-      </Button>
-
-      {/* 애플 로그인 */}
-      <Button
-        type="submit"
-        name="action"
-        value="apple"
-        className="w-full flex items-center gap-2 bg-black text-white hover:bg-gray-800"
-      >
-        <FaApple className="text-xl" />
-        애플 로그인
-      </Button>
-    </form>
+            {/* 로그인 버튼 */}
+            <Button type="submit" className="w-full bg-destructive  hover:bg-red-800">
+              로그인
+            </Button>
+          </form>
+    </Form>
   );
 };
 
