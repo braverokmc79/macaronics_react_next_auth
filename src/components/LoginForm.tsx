@@ -1,6 +1,4 @@
 "use client";
-
-
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -16,6 +14,7 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { doCredentialsLogin } from "@/app/actions/auth";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
 
 
 // 1) 폼 유효성 검사 스키마 정의
@@ -26,6 +25,7 @@ const formSchema = z.object({
 
 const LoginForm: React.FC = () => {
   const router = useRouter();
+  const [isLoading, setIsLoading] =useState(false);
 
   // 2) useForm 설정
   const form = useForm<z.infer<typeof formSchema>>({
@@ -35,18 +35,29 @@ const LoginForm: React.FC = () => {
 
   // 3) 폼 제출 핸들러
   const handleSubmit = async (data: z.infer<typeof formSchema>) => {
-    console.log("로그인 확인이 통과되었습니다.", data);
-    console.log("로그인 확인이 통과되었습니다.", data.email);
-    
-    const response = await doCredentialsLogin(data);
+    setIsLoading(true); // 로그인 시작 → 로딩 상태 true
+    try {
+      const response = await doCredentialsLogin(data);
+  
+      if (response && response.error) {       
+        if (response.field && response.field === "password") {
+          form.setError(response.field, { message: response.error });
+        } else {
+          form.setError("email", { message: response.error }); // 기본적으로 이메일 필드에 표시
+        }       
+        return;
+      }
 
-    if (response && !!response.error) {
-      console.log("Error: " , response);
-    } else {
       router.push("/home");
+    } catch (error) {
+      console.error("handleSubmit Error: ", error);
+      form.setError("email", { message: "로그인 중 오류가 발생했습니다." });
+    } finally {
+      setIsLoading(false); 
     }
-
   };
+  
+  
 
   return (
         <Form {...form}>
@@ -85,8 +96,8 @@ const LoginForm: React.FC = () => {
             />
 
             {/* 로그인 버튼 */}
-            <Button type="submit" className="w-full bg-destructive  hover:bg-red-800">
-              로그인
+            <Button type="submit" className="w-full bg-destructive hover:bg-red-800" disabled={isLoading}>
+              {isLoading ? "로그인 중..." : "로그인"}
             </Button>
           </form>
     </Form>

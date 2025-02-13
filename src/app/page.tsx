@@ -7,18 +7,16 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import Link from "next/link";
 import LoginForm from '@/components/LoginForm';
 import SocialLogin from '@/components/SocialLogin';
-import { useState, useEffect } from "react";
+//import { useState, useEffect } from "react";
 
 const RootAppPage: React.FC = () => {
-  const [isClient, setIsClient] = useState(false);
+  // const [isClient, setIsClient] = useState(false);
 
-  //Text content does not match server-rendered HTML
-  useEffect(() => {
-    setIsClient(true);
-  }, []);
-
-  if (!isClient) return null;
-
+  // //Text content does not match server-rendered HTML
+  // useEffect(() => {
+  //   setIsClient(true);
+  // }, []);
+  // if (!isClient) return null;  
   return (
     <div className='h-screen flex items-center justify-center '>
       <Card className="w-full max-w-sm mx-auto">
